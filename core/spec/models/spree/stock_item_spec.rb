@@ -155,13 +155,15 @@ describe Spree::StockItem do
       subject.variant.update_column(:updated_at, 1.day.ago)
     end
 
-    context "binary_inventory_cache is set to false (default)" do
-      before do
-        @pre_binary_inventory_cache = Spree::Config.binary_inventory_cache
-        Spree::Config.binary_inventory_cache = false
-      end
+    around do |example|
+      cache_setting = Spree::Config.binary_inventory_cache
+      Spree::Config.binary_inventory_cache = binary_inventory_cache
+      example.run
+      Spree::Config.binary_inventory_cache = cache_setting
+    end
 
-      after { Spree::Config.binary_inventory_cache = @pre_binary_inventory_cache }
+    context "binary_inventory_cache is set to false (default)" do
+      let(:binary_inventory_cache) { false }
 
       context "in_stock? changes" do
         it "touches its variant" do
@@ -181,12 +183,7 @@ describe Spree::StockItem do
     end
 
     context "binary_inventory_cache is set to true" do
-      before do
-        @pre_binary_inventory_cache = Spree::Config.binary_inventory_cache
-        Spree::Config.binary_inventory_cache = true
-      end
-
-      after { Spree::Config.binary_inventory_cache = @pre_binary_inventory_cache }
+      let(:binary_inventory_cache) { true }
 
       context "in_stock? changes" do
         it "touches its variant" do
